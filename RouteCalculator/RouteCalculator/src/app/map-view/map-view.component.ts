@@ -1,14 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import polyline from '@mapbox/polyline'
-import { AfterViewInit, Component, DestroyRef, inject, OnChanges, OnInit, signal, effect } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, inject, OnChanges, OnInit, signal, effect, input, computed } from '@angular/core';
 import * as L from 'leaflet';
+import { FormsData } from '../forms-data.model';
 @Component({
   selector: 'app-map-view',
   imports: [],
   templateUrl: './map-view.component.html',
   styleUrl: './map-view.component.css'
 })
-export class MapViewComponent implements AfterViewInit, OnInit {
+export class MapViewComponent implements AfterViewInit {
+  formsData = input.required<FormsData>()
+
 
   private httpClient = inject(HttpClient)
   private destroyRef = inject(DestroyRef)
@@ -16,14 +19,21 @@ export class MapViewComponent implements AfterViewInit, OnInit {
   private map:any;
   private points = signal<string[]>([])
   
-  private apiURL = "http://localhost:8080/api/routes/45.535905/-73.335379/10000"
+  private apiURL = computed(()=>{
+    return `http://localhost:8080/api/routes/${this.formsData().latitude}/${this.formsData().longitude}/${this.formsData().distance}`
+  })
+
 
   constructor() {
     effect(() => {
-      const currentPoints = this.points(); // Read the signal to ensure tracking
+      const currentPoints = this.points();
       console.log('[MapView] Effect triggered. Number of points in signal:', currentPoints.length);
       this.updateMap(currentPoints)
     });
+    effect(() => {
+      const currentFormsData = this.formsData()
+      this.getRoute()
+    })
   }
 
   private initMap(): void {
@@ -47,6 +57,11 @@ export class MapViewComponent implements AfterViewInit, OnInit {
   }
 
   updateMap(currentPoints: string[]){
+        this.map.eachLayer((layer:any) => {
+          if (!(layer instanceof L.TileLayer)) {
+            this.map.removeLayer(layer);
+          }
+        });
     console.log("HEY")
     for(const point of currentPoints){
       const pointsDecoded = polyline.decode(point)
@@ -60,8 +75,8 @@ export class MapViewComponent implements AfterViewInit, OnInit {
 
   }
 
-  ngOnInit(): void {
-    const subscription = this.httpClient.get<any[]>(this.apiURL).subscribe(routes => {
+  getRoute(): void {
+    const subscription = this.httpClient.get<any[]>(this.apiURL()).subscribe(routes => {
       console.log(routes)
        const newPointsArray: string[] = [];
        let distance = 0

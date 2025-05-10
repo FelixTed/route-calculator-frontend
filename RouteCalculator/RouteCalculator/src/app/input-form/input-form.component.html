@@ -1,0 +1,13 @@
+<form (ngSubmit)="onFormSubmit()">
+    <div>
+        <span>Enter your coordinates</span>
+        <input type="number" [(ngModel)]="latitude" name="latitude">
+        <input type="number" [(ngModel)]="longitude" name="longitude">
+        <button (click)="getCurrentLocation()">Find my location</button>
+    </div>
+    <div>
+        <span>Enter your desired distance (Meters)</span>
+        <input type="number" [(ngModel)]="distance" name="distance">
+    </div>
+    <button type="submit">Create running loop</button>
+</form>
