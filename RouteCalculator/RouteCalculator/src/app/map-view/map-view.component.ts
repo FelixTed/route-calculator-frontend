@@ -18,6 +18,8 @@ export class MapViewComponent implements AfterViewInit {
 
   private map:any;
   private points = signal<string[]>([])
+
+
   
   private apiURL = computed(()=>{
     return `http://localhost:8080/api/routes/${this.formsData().latitude}/${this.formsData().longitude}/${this.formsData().distance}`
@@ -25,15 +27,7 @@ export class MapViewComponent implements AfterViewInit {
 
 
   constructor() {
-    effect(() => {
-      const currentPoints = this.points();
-      console.log('[MapView] Effect triggered. Number of points in signal:', currentPoints.length);
-      this.updateMap(currentPoints)
-    });
-    effect(() => {
-      const currentFormsData = this.formsData()
-      this.getRoute()
-    })
+    
   }
 
   private initMap(): void {
@@ -54,6 +48,13 @@ export class MapViewComponent implements AfterViewInit {
 
   ngAfterViewInit(){
     this.initMap()
+    
+    computed(() => {
+      this.updateMap(this.points())
+    })
+    computed(() => {
+      this.getRoute(this.apiURL())
+    })
   }
 
   updateMap(currentPoints: string[]){
@@ -75,8 +76,8 @@ export class MapViewComponent implements AfterViewInit {
 
   }
 
-  getRoute(): void {
-    const subscription = this.httpClient.get<any[]>(this.apiURL()).subscribe(routes => {
+  getRoute(apiURL:string): void {
+    const subscription = this.httpClient.get<any[]>(apiURL, {withCredentials:true}).subscribe(routes => {
       console.log(routes)
        const newPointsArray: string[] = [];
        let distance = 0
