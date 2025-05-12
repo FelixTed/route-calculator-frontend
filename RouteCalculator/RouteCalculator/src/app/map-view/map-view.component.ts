@@ -19,16 +19,37 @@ export class MapViewComponent implements AfterViewInit {
   private map:any;
   private points = signal<string[]>([])
 
+  constructor(){
+      effect(() => {
+        console.log("FHEFKGHE")
+      const currentApiURL = this.apiURL();
+      if (currentApiURL && this.map) {
+        console.log('Effect triggered: apiURL changed. Fetching route from:', currentApiURL);
+        this.getRoute(currentApiURL);
+      } else if (!this.map) {
+        console.log('Effect for getRoute: Map not yet initialized.');
+      }
+    });
 
   
-  private apiURL = computed(()=>{
-    return `http://localhost:8080/api/routes/${this.formsData().latitude}/${this.formsData().longitude}/${this.formsData().distance}`
+    effect(() => {
+      const currentPoints = this.points(); 
+      if (this.map) {
+        console.log('Effect triggered: points changed. Updating map.');
+        this.updateMap(currentPoints);
+      } else {
+        console.log('Effect for updateMap: Map not yet initialized.');
+      }
+    });
+  }
+  
+  private apiURL = computed(() => {
+    const data = this.formsData();
+    return `http://localhost:8080/api/routes/${data.latitude}/${data.longitude}/${data.distance}`;
   })
 
 
-  constructor() {
-    
-  }
+  
 
   private initMap(): void {
     this.map = L.map('map', {
@@ -49,12 +70,6 @@ export class MapViewComponent implements AfterViewInit {
   ngAfterViewInit(){
     this.initMap()
     
-    computed(() => {
-      this.updateMap(this.points())
-    })
-    computed(() => {
-      this.getRoute(this.apiURL())
-    })
   }
 
   updateMap(currentPoints: string[]){

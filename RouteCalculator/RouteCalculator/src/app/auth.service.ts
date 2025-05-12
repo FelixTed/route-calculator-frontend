@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal, computed } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 
 @Injectable({
@@ -7,6 +8,8 @@ import { Injectable, signal, computed } from '@angular/core';
 })
 export class AuthService {
   private userSignal= signal<any>(null)
+  private authReadySubject = new BehaviorSubject<boolean>(false);
+  authReady$ = this.authReadySubject.asObservable();
 
   constructor(private http: HttpClient){
     this.fetchUser()
@@ -16,14 +19,20 @@ export class AuthService {
     return this.userSignal.asReadonly()
   }
 
-  isAuthenticated = computed(() => !!this.userSignal())
+  isAuthenticated = computed(() => this.userSignal())
 
   private fetchUser(){
     this.http.get('http://localhost:8080/api/userinfo', { withCredentials: true }).subscribe({
-    next: data => this.userSignal.set(data),
+    next: data =>{
+      console.log(data)
+      this.userSignal.set(data) 
+      this.authReadySubject.next(true);
+
+    },
     error: () => {
       console.log("OPSIE")
       this.userSignal.set(null)
+      this.authReadySubject.next(true)
     }
   });
   }

@@ -1,0 +1,5 @@
+<div class="app-wrapper">
+    <app-map-view class="map-view-host" [formsData]="formsData()"></app-map-view>
+    <app-input-form class="input-form-host" (formData)="onFormOutput($event)"></app-input-form>
+    <button (click)="logout()">LOGOUT</button>
+</div>
