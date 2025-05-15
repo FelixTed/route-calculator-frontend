@@ -10,8 +10,8 @@ import { FormsData } from '../forms-data.model';
   styleUrl: './input-form.component.css'
 })
 export class InputFormComponent {
-  latitude = 30.047992
-  longitude = -94.3357433
+  latitude = 0
+  longitude = 0
   distance = 10000
   @Output() formData = new EventEmitter<FormsData>()
 

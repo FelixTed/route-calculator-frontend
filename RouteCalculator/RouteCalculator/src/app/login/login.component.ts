@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
 })
 export class LoginComponent {
   login(){
-    window.location.href = 'http://localhost:8080/login/oauth2/code/google'
+    window.location.href = 'http://localhost:8080/api/auth/google'
 
   }
 }
