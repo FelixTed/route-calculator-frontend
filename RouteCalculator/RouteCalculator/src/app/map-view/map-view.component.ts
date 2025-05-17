@@ -22,26 +22,25 @@ export class MapViewComponent implements AfterViewInit {
   private points = signal<string[]>([])
   calculatedDistance = output<number>()
 
-  constructor(){
-      effect(() => {
-        console.log("FHEFKGHE")
-      const currentApiURL = this.apiURL();
-      if (currentApiURL && this.map) {
-        console.log('Effect triggered: apiURL changed. Fetching route from:', currentApiURL);
-        this.getRoute(currentApiURL);
-      } else if (!this.map) {
-        console.log('Effect for getRoute: Map not yet initialized.');
-      }
-    });
-
-  
+  constructor() {
     effect(() => {
-      const currentPoints = this.points(); 
-      if (this.map) {
-        console.log('Effect triggered: points changed. Updating map.');
+      // Remove console.log("FHEFKGHE")
+      const data = this.formsData();
+      // Check if we have valid data before proceeding
+      if (data && data.latitude && data.longitude && data.distance) {
+        const currentApiURL = this.apiURL();
+        if (currentApiURL && this.map) {
+          console.log('Getting route for:', currentApiURL);
+          this.getRoute(currentApiURL);
+        }
+      }
+    }, { allowSignalWrites: true }); // Allow signal updates within effect
+
+    effect(() => {
+      const currentPoints = this.points();
+      if (this.map && currentPoints.length > 0) {
+        console.log('Updating map with points:', currentPoints.length);
         this.updateMap(currentPoints);
-      } else {
-        console.log('Effect for updateMap: Map not yet initialized.');
       }
     });
   }
@@ -75,74 +74,86 @@ export class MapViewComponent implements AfterViewInit {
     
   }
 
-  updateMap(currentPoints: string[]){
-        this.map.eachLayer((layer:any) => {
-          if (!(layer instanceof L.TileLayer)) {
+  updateMap(currentPoints: string[]) {
+    // Clear existing layers
+    this.map.eachLayer((layer: any) => {
+        if (!(layer instanceof L.TileLayer)) {
             this.map.removeLayer(layer);
+        }
+    });
+
+    if (currentPoints.length === 0) return;
+
+    // Get the first point of the first segment for the start marker
+    const firstSegment = polyline.decode(currentPoints[0]);
+    const startPoint = firstSegment[0];
+    const startMarker = L.marker([startPoint[0], startPoint[1]]).addTo(this.map);
+    startMarker.bindPopup('Start Point', { autoClose: false, closeOnClick: false }).openPopup();
+
+    // Draw all route segments
+    let bounds = L.latLngBounds([startPoint]);
+    currentPoints.forEach((point, index) => {
+        const pointsDecoded = polyline.decode(point);
+        
+        // Add decoded points to bounds
+        pointsDecoded.forEach(p => bounds.extend(p));
+
+        const line = L.polyline(pointsDecoded, {
+            weight: 4,
+            opacity: 0.8,
+        }).addTo(this.map);
+
+        // Add the arrow decorator
+        L.polylineDecorator(line, {
+            patterns: [
+                {
+                    offset: '25%',
+                    repeat: 50,
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 15,
+                        polygon: false,
+                        pathOptions: {
+                            stroke: true,
+                            weight: 3
+                        }
+                    })
+                }
+            ]
+        }).addTo(this.map);
+    });
+
+    // Fit the map to show all points
+    this.map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+  getRoute(apiURL: string): void {
+    console.log('Fetching route from API:', apiURL);
+    this.points.set([]); // Clear existing points before new request
+    
+    const subscription = this.httpClient.get<any[]>(apiURL, { withCredentials: true })
+      .subscribe({
+        next: (routes) => {
+          console.log('Received routes:', routes);
+          const newPointsArray: string[] = [];
+          let distance = 0;
+          
+          for (const route of routes) {
+            if (route.paths && route.paths[0]) {
+              newPointsArray.push(route.paths[0].points);
+              distance += route.paths[0].distance;
+            }
           }
-        });
-    console.log("HEY")
-    let count = 0
+          
+          this.calculatedDistance.emit(distance);
+          this.points.set(newPointsArray);
+        },
+        error: (error) => {
+          console.error('Error fetching route:', error);
+        }
+      });
 
-
-    for(const point of currentPoints){
-      const pointsDecoded = polyline.decode(point)
-      if (count==0){
-        const startMarker = L.marker(pointsDecoded[0]).addTo(this.map);
-        startMarker.bindPopup('Start Point', {autoClose:false, closeOnClick:false}).openPopup();
-        console.log(pointsDecoded[0])
-      }
-      if(count ==currentPoints.length - 1){
-        // const endMarker = L.marker(pointsDecoded[pointsDecoded.length-1]).addTo(this.map);
-        // endMarker.bindPopup('Ending Point', {autoClose:false, closeOnClick:false}).openPopup();
-        console.log(pointsDecoded[pointsDecoded.length-1])
-      }
-      console.log("HELLO")
-      console.log(pointsDecoded[pointsDecoded.length-1]);
-      const line = L.polyline(pointsDecoded, {
-                  weight: 4,
-                  opacity: 0.8,
-              }).addTo(this.map);
-      
-      // Add the arrow decorator separately
-      L.polylineDecorator(line, {
-          patterns: [
-              {
-                  offset: '25%',
-                  repeat: 50,
-                  symbol: L.Symbol.arrowHead({
-                      pixelSize: 15,
-                      polygon: false,
-                      pathOptions: {
-                          stroke: true,
-                          weight: 3
-                      }
-                  })
-              }
-          ]
-      }).addTo(this.map);this.map.fitBounds(line.getBounds());
-      count++;
-    }
-
-  }
-
-  getRoute(apiURL:string): void {
-    const subscription = this.httpClient.get<any[]>(apiURL, {withCredentials:true}).subscribe(routes => {
-      console.log(routes)
-       const newPointsArray: string[] = [];
-       let distance = 0
-      for (const route of routes) {
-          newPointsArray.push(route.paths[0].points);
-          distance += route.paths[0].distance
-      }
-      this.calculatedDistance.emit(distance)
-      this.points.set(newPointsArray);
-      
-      console.log(this.points())
-      //routes?.
-    })
     this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe()
-    })
+      subscription.unsubscribe();
+    });
   }
 }
