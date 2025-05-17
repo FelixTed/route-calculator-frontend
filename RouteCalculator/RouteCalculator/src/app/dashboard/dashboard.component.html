@@ -1,5 +1,8 @@
 <div class="app-wrapper">
-    <app-map-view class="map-view-host" [formsData]="formsData()"></app-map-view>
-    <app-input-form class="input-form-host" (formData)="onFormOutput($event)"></app-input-form>
-    <button (click)="logout()">LOGOUT</button>
+    <app-map-view class="map-view-host" [formsData]="formsData()" (calculatedDistance)="onCalculatedDistance($event)"></app-map-view>
+    <div class="form-basically">
+        <app-input-form class="input-form-host" (formData)="onFormOutput($event)" [calculatedDistance]="distance()"></app-input-form>
+        <button class="logout-button" (click)="logout()">LOGOUT</button>
+    </div>
+
 </div>

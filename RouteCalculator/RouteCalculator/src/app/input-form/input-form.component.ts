@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormsData } from '../forms-data.model';
 
@@ -13,6 +13,8 @@ export class InputFormComponent {
   latitude = 0
   longitude = 0
   distance = 10000
+  calculatedDistance = input<number>()
+
   @Output() formData = new EventEmitter<FormsData>()
 
 

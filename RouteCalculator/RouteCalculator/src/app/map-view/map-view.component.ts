@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import polyline from '@mapbox/polyline'
-import { AfterViewInit, Component, DestroyRef, inject, OnChanges, OnInit, signal, effect, input, computed } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, inject, OnChanges, OnInit, signal, effect, input, computed, output } from '@angular/core';
 import * as L from 'leaflet';
 import { FormsData } from '../forms-data.model';
+import { single } from 'rxjs';
 @Component({
   selector: 'app-map-view',
   imports: [],
@@ -18,6 +19,7 @@ export class MapViewComponent implements AfterViewInit {
 
   private map:any;
   private points = signal<string[]>([])
+  calculatedDistance = output<number>()
 
   constructor(){
       effect(() => {
@@ -79,14 +81,25 @@ export class MapViewComponent implements AfterViewInit {
           }
         });
     console.log("HEY")
+    let count = 0
+
     for(const point of currentPoints){
       const pointsDecoded = polyline.decode(point)
-      const startMarker = L.marker(pointsDecoded[0]).addTo(this.map);
-      startMarker.bindPopup('Start Point').openPopup();
+      if (count==0){
+          const startMarker = L.marker(pointsDecoded[0]).addTo(this.map);
+        startMarker.bindPopup('Start Point').openPopup();
+        console.log(pointsDecoded)
+      }
+      if(count ==currentPoints.length - 1){
+        const endMarker = L.marker(pointsDecoded[pointsDecoded.length-1]).addTo(this.map);
+        endMarker.bindPopup('Ending Point').openPopup();
+        console.log(pointsDecoded[0])
+      }
       console.log("HELLO")
-      console.log(pointsDecoded)
+      console.log(pointsDecoded[pointsDecoded.length-1])
       const line = L.polyline(pointsDecoded, {color:'blue'}).addTo(this.map)
       this.map.fitBounds(line.getBounds());
+      count++;
     }
 
   }
@@ -100,8 +113,8 @@ export class MapViewComponent implements AfterViewInit {
           newPointsArray.push(route.paths[0].points);
           distance += route.paths[0].distance
       }
-      console.log('distance ' + distance)
-      this.points.set(newPointsArray); // Set the signal with the NEW array reference
+      this.calculatedDistance.emit(distance)
+      this.points.set(newPointsArray);
       
       console.log(this.points())
       //routes?.

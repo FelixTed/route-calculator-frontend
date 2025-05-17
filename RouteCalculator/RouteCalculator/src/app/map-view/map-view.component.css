@@ -1,14 +1,21 @@
 .map-container {
-    width: 800px;
+    /* width: 800px; */
+    min-width: 400px;
+    width: 100%;
+    width:max-content;
     height: 600px;
     margin: 30px;
+
   }
   
   .map-frame {
     border: 2px solid black;
     height: 100%;
+    border-radius: 15px;
   }
   
   #map {
     height: 100%;
+        border-radius: 15px;
+
   }

@@ -18,6 +18,8 @@ export class DashboardComponent {
   auth = inject(AuthService)
   router = inject(Router)
   formsData = signal<FormsData>({latitude:30.047992, longitude:  -94.3357433, distance: 10000})
+
+  distance = signal<number>(0)
   
   onFormOutput(formsData: FormsData){
     this.formsData.set(formsData)
@@ -26,6 +28,10 @@ export class DashboardComponent {
   logout(){
     this.auth.logout()
     this.router.navigate(['/login'])
+  }
+
+  onCalculatedDistance(distance:number){
+    this.distance.set(distance);
   }
  
 }
