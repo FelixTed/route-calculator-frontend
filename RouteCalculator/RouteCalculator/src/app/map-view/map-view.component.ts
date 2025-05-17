@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import polyline from '@mapbox/polyline'
+import 'leaflet-polylinedecorator';
 import { AfterViewInit, Component, DestroyRef, inject, OnChanges, OnInit, signal, effect, input, computed, output } from '@angular/core';
 import * as L from 'leaflet';
 import { FormsData } from '../forms-data.model';
@@ -83,22 +84,43 @@ export class MapViewComponent implements AfterViewInit {
     console.log("HEY")
     let count = 0
 
+
     for(const point of currentPoints){
       const pointsDecoded = polyline.decode(point)
       if (count==0){
-          const startMarker = L.marker(pointsDecoded[0]).addTo(this.map);
-        startMarker.bindPopup('Start Point').openPopup();
-        console.log(pointsDecoded)
-      }
-      if(count ==currentPoints.length - 1){
-        const endMarker = L.marker(pointsDecoded[pointsDecoded.length-1]).addTo(this.map);
-        endMarker.bindPopup('Ending Point').openPopup();
+        const startMarker = L.marker(pointsDecoded[0]).addTo(this.map);
+        startMarker.bindPopup('Start Point', {autoClose:false, closeOnClick:false}).openPopup();
         console.log(pointsDecoded[0])
       }
+      if(count ==currentPoints.length - 1){
+        // const endMarker = L.marker(pointsDecoded[pointsDecoded.length-1]).addTo(this.map);
+        // endMarker.bindPopup('Ending Point', {autoClose:false, closeOnClick:false}).openPopup();
+        console.log(pointsDecoded[pointsDecoded.length-1])
+      }
       console.log("HELLO")
-      console.log(pointsDecoded[pointsDecoded.length-1])
-      const line = L.polyline(pointsDecoded, {color:'blue'}).addTo(this.map)
-      this.map.fitBounds(line.getBounds());
+      console.log(pointsDecoded[pointsDecoded.length-1]);
+      const line = L.polyline(pointsDecoded, {
+                  weight: 4,
+                  opacity: 0.8,
+              }).addTo(this.map);
+      
+      // Add the arrow decorator separately
+      L.polylineDecorator(line, {
+          patterns: [
+              {
+                  offset: '25%',
+                  repeat: 50,
+                  symbol: L.Symbol.arrowHead({
+                      pixelSize: 15,
+                      polygon: false,
+                      pathOptions: {
+                          stroke: true,
+                          weight: 3
+                      }
+                  })
+              }
+          ]
+      }).addTo(this.map);this.map.fitBounds(line.getBounds());
       count++;
     }
 

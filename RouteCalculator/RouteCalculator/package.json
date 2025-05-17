@@ -18,8 +18,10 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@mapbox/polyline": "^1.2.1",
+    "@types/leaflet-polylinedecorator": "^1.6.4",
     "angular-oauth2-oidc": "^19.0.0",
     "leaflet": "^1.7.1",
+    "leaflet-polylinedecorator": "^1.6.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
