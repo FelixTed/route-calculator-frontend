@@ -17,7 +17,7 @@ export class DashboardComponent {
   http = inject(HttpClient)
   auth = inject(AuthService)
   router = inject(Router)
-  formsData = signal<FormsData>({latitude:30.047992, longitude:  -94.3357433, distance: 10000})
+  formsData = signal<FormsData>({latitude:0, longitude:  0, distance: 10000})
 
   distance = signal<number>(0)
   
